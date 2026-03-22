@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Maestro</title>
+   <title>Sonic Station</title>
     
     <!-- ENLACE AL MANIFEST -->
     <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" href="logo.png">
     <meta name="theme-color" content="#0d1117">
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -17,6 +18,8 @@
             --border: #30363d;
             --text: #c9d1d9;
             --accent: #58a6ff;
+            --green: #3fb950;
+            --red: #f85149;
         }
 
         body {
@@ -30,10 +33,42 @@
             padding: 20px;
         }
 
+        /* Barra de Batería Superior */
+        .header-status {
+            width: 100%;
+            max-width: 1100px;
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 10px;
+        }
+        .battery-box {
+            background: var(--card);
+            border: 1px solid var(--border);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Logo Central */
+        .logo-container {
+            margin-top: 20px;
+            text-align: center;
+        }
+        .logo-container img {
+            width: 80px;
+            height: 80px;
+            border-radius: 18px;
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+        }
+
         .search-container {
             width: 100%;
             max-width: 600px;
-            margin: 40px 0;
+            margin: 30px 0 40px 0;
         }
         .search-bar {
             display: flex;
@@ -98,6 +133,19 @@
 </head>
 <body>
 
+    <!-- BARRA DE ESTADO SUPERIOR -->
+    <div class="header-status">
+        <div class="battery-box">
+            <i id="batt-icon" class="fas fa-battery-three-quarters"></i>
+            <span id="batt-level">--%</span>
+        </div>
+    </div>
+
+    <!-- LOGO DE LA BRÚJULA -->
+    <div class="logo-container">
+        <img src="logo.png" alt="Dashboard Logo">
+    </div>
+
     <div class="search-container">
         <form action="https://www.google.com/search" method="GET">
             <div class="search-bar">
@@ -122,8 +170,40 @@
         <a href="https://web.whatsapp.com" class="card"><i class="fab fa-whatsapp" style="color: #25D366;"></i><span>WhatsApp</span></a>
     </div>
 
-    <!-- SCRIPT DE REGISTRO PARA LA APP -->
     <script>
+        // LÓGICA DE BATERÍA REAL
+        function updateBattery() {
+            if ('getBattery' in navigator) {
+                navigator.getBattery().then(battery => {
+                    const levelSpan = document.getElementById('batt-level');
+                    const icon = document.getElementById('batt-icon');
+
+                    const refreshBattery = () => {
+                        const level = Math.floor(battery.level * 100);
+                        levelSpan.innerText = level + "%";
+                        
+                        // Cambiar icono y color según nivel
+                        if(level <= 20) {
+                            icon.className = "fas fa-battery-quarter";
+                            levelSpan.style.color = "var(--red)";
+                        } else if(level >= 80) {
+                            icon.className = "fas fa-battery-full";
+                            levelSpan.style.color = "var(--green)";
+                        } else {
+                            icon.className = "fas fa-battery-half";
+                            levelSpan.style.color = "var(--text)";
+                        }
+                    };
+
+                    refreshBattery();
+                    battery.addEventListener('levelchange', refreshBattery);
+                });
+            }
+        }
+
+        updateBattery();
+
+        // SCRIPT DE REGISTRO PARA LA APP
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js')
