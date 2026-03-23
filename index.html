@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-   <title>Sonic Station</title>
+    <title>Sonic Station</title>
     
     <!-- ENLACE AL MANIFEST -->
     <link rel="manifest" href="manifest.json">
@@ -30,45 +30,51 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 20px;
+            padding: 15px;
+            min-height: 100vh;
         }
 
-        /* Barra de Batería Superior */
+        /* Barra de Estado Superior */
         .header-status {
             width: 100%;
             max-width: 1100px;
             display: flex;
             justify-content: flex-end;
-            margin-bottom: 10px;
+            align-items: center;
+            margin-bottom: 15px;
+            gap: 10px;
         }
-        .battery-box {
+        .status-item {
             background: var(--card);
             border: 1px solid var(--border);
-            padding: 5px 15px;
+            padding: 6px 14px;
             border-radius: 20px;
-            font-size: 14px;
+            font-size: 13px;
+            font-weight: 600;
             display: flex;
             align-items: center;
             gap: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
+        #clock { color: var(--accent); }
 
         /* Logo Central */
         .logo-container {
-            margin-top: 20px;
+            margin: 20px 0;
             text-align: center;
         }
         .logo-container img {
-            width: 80px;
-            height: 80px;
-            border-radius: 18px;
+            width: 90px;
+            height: 90px;
+            border-radius: 22px;
             border: 1px solid var(--border);
-            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+            box-shadow: 0 4px 25px rgba(0,0,0,0.5);
         }
 
         .search-container {
             width: 100%;
             max-width: 600px;
-            margin: 30px 0 40px 0;
+            margin: 10px 0 40px 0;
         }
         .search-bar {
             display: flex;
@@ -106,22 +112,21 @@
             text-align: center;
             transition: all 0.2s ease-in-out;
         }
-
         .card:hover {
             transform: translateY(-4px);
             background: #21262d;
             border-color: #8b949e;
         }
-
         .card i {
             font-size: 32px;
             margin-bottom: 12px;
             display: block;
         }
 
+        /* Colores de Iconos */
         .c-yt { color: #FF0000; }
-        .c-pi { color: #E60023; }
         .c-re { color: #FF4500; }
+        .c-pi { color: #E60023; }
         .c-keep { color: #FBBC04; }
         .c-drive { color: #34A853; }
         .c-cal { color: #4285F4; }
@@ -133,17 +138,19 @@
 </head>
 <body>
 
-    <!-- BARRA DE ESTADO SUPERIOR -->
     <div class="header-status">
-        <div class="battery-box">
+        <div class="status-item">
+            <i class="far fa-clock"></i>
+            <span id="clock">--:-- --</span>
+        </div>
+        <div class="status-item">
             <i id="batt-icon" class="fas fa-battery-three-quarters"></i>
             <span id="batt-level">--%</span>
         </div>
     </div>
 
-    <!-- LOGO DE LA BRÚJULA -->
     <div class="logo-container">
-        <img src="logo.png" alt="Dashboard Logo">
+        <img src="logo.png" alt="Sonic Station Logo">
     </div>
 
     <div class="search-container">
@@ -171,18 +178,30 @@
     </div>
 
     <script>
-        // LÓGICA DE BATERÍA REAL
+        // RELOJ 12 HORAS (AM/PM)
+        function updateClock() {
+            const now = new Date();
+            let hours = now.getHours();
+            let minutes = now.getMinutes();
+            let ampm = hours >= 12 ? 'PM' : 'AM';
+            
+            hours = hours % 12;
+            hours = hours ? hours : 12; // La hora '0' pasa a ser '12'
+            minutes = minutes < 10 ? '0' + minutes : minutes;
+            
+            const strTime = hours + ':' + minutes + ' ' + ampm;
+            document.getElementById('clock').textContent = strTime;
+        }
+
+        // BATERÍA
         function updateBattery() {
             if ('getBattery' in navigator) {
                 navigator.getBattery().then(battery => {
                     const levelSpan = document.getElementById('batt-level');
                     const icon = document.getElementById('batt-icon');
-
-                    const refreshBattery = () => {
+                    const refresh = () => {
                         const level = Math.floor(battery.level * 100);
                         levelSpan.innerText = level + "%";
-                        
-                        // Cambiar icono y color según nivel
                         if(level <= 20) {
                             icon.className = "fas fa-battery-quarter";
                             levelSpan.style.color = "var(--red)";
@@ -194,21 +213,21 @@
                             levelSpan.style.color = "var(--text)";
                         }
                     };
-
-                    refreshBattery();
-                    battery.addEventListener('levelchange', refreshBattery);
+                    refresh();
+                    battery.addEventListener('levelchange', refresh);
                 });
             }
         }
 
+        // INICIAR
+        setInterval(updateClock, 1000);
+        updateClock();
         updateBattery();
 
-        // SCRIPT DE REGISTRO PARA LA APP
+        // SERVICE WORKER
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js')
-                .then(reg => console.log('App lista para instalar'))
-                .catch(err => console.log('Error de registro', err));
+                navigator.serviceWorker.register('sw.js');
             });
         }
     </script>

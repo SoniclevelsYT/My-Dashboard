@@ -1,9 +1,15 @@
-// Service Worker básico para permitir la instalación (PWA)
-self.addEventListener('install', (event) => {
-    console.log('Service Worker: Instalado');
+const CACHE_NAME = 'sonic-station-v1';
+const assets = [
+  './',
+  './index.html',
+  './manifest.json',
+  './logo.png'
+];
+
+self.addEventListener('install', e => {
+  e.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(assets)));
 });
 
-self.addEventListener('fetch', (event) => {
-    // Esto permite que la app funcione incluso si hay peticiones de red
-    event.respondWith(fetch(event.request));
+self.addEventListener('fetch', e => {
+  e.respondWith(caches.match(e.request).then(res => res || fetch(e.request)));
 });
